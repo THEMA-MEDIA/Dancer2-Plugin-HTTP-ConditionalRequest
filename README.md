@@ -1,48 +1,32 @@
 # Dancer2-Plugin-HTTP-ConditionalRequest
 Conditionally handling HTTP request based on eTag or Modification-Date, according to RFC 7232
 
-Doing conditional GET request DWIM with Last Modifiacation Date:
+It can be used for telling clients/chaces that they already have the current version when using GET
+or preventing lost-updates with PUT:
 
-    get => HTTP_ConditionalRequest sub {
-        
-        # check if it's a sensible request or bail out
-        
-        my $date_lastModification;
-      
-        # retrieve last modification date
-        # - compute it from database dates
+    put '/my_resource/:id' => sub {
+        ...
+        # check stuff
+        # - compute eTag from MD5
         # - use an external table
-        
-        http_conditional_lastModification($date_lastModification);
-        
-        # HTTP Conditional did not intercept so we continue our original method
-        
-        return $data;
-    };
+        # - find a last modification date
+        ...
+        http_conditional {
+            eTag        => '2d5730a4c92b1061',
+            LastMod     => HTTP Date, # Tue, 15 Nov 1994 12:45:26 GMT
+        } => sub {
+            ...
+            # do the real stuff, like updating
+            ...
+        }
+    }
+    
+The Dancer keyword introduced here: `http_conditional` will take either or both arguments: `eTag` or `LastMod`, which are two validators according to RFC-7232. Section 6 describes clearly how to evaluate the presedence of these validators.
 
-or preventing lost-updates with PUT and an eTag:
+Sending these validators with a GET request is used for caching and respond with a status of 304 (Not Modified) when the client has a 'fresh' version.
 
-    put => HTTP_ConditionalRequest sub {
-        
-        # check if it's a sensibel request or bail out
-        
-        my $eTag;
-        
-        # retrieve eTag
-        # - compute it from MD5
-        # - use an external table
-        
-        http_conditional_eTag($eTag)'
-        
-        # HTTP Conditional did not intercept so we continue our original method
-      
-        # update database
-       
-       return;
-    };
+When used with 'unsafe' methods that will cause updates, these validators can prevent 'lost updates' and will respond with 412 (Precondition Failed) when there might have happened an intermediate update.
 
-The two Dancer Keywords introduced do the right thing in their context. For example, in a GET and checking with a last modification date as above, the method will halt and return a 304 if the dates do match. I t would return a 428 if there was no If-Modified-Since header-field is found.
+To make clients obligated to send those header-fields, the config can be set to be required. For the unsafe-methods when missing those headers, it will result in a 428 (Precondition Required) conform the RFC-6585 (Additional HTTP Status Codes). This will be set in the Dancer config file.
 
-However, in a PUT or DELETE, it would have satisfied the 'If-Not-Modified-Since' header field and actually do the rest of the route.
-
-In a GET route, the response headers must be set if they have been used to check the conditional, otherwise it will carp. How else would the client be able to make a next request if it doesn't have the values to check against.
+There is a lot of additional information in RFC-7232 about generating and retrieving eTags or last-modification-dates. Unfortunatly, for a GET method one might have to retrieve and process the resource before being capable of generating a eTag. Or one kight have to go through a few pieces of underlying data structures to find tha last-modification date. Okay, one could skip the 'post-processing' like serialisation and one does no longer have to send the data but only the status message 304 (Not Modified). Please read-up in the RFC about those topics.
