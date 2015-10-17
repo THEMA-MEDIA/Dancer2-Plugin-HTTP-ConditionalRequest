@@ -13,15 +13,38 @@ version when using GET or preventing lost-updates with PUT:
         # - find a last modification date
         ...
         http_conditional {
-            eTag        => '2d5730a4c92b1061',
-            LastMod     => HTTP Date, # Tue, 15 Nov 1994 12:45:26 GMT
+            eTag            => '2d5730a4c92b1061',
+            LastModified    => "Tue, 15 Nov 1994 12:45:26 GMT", # HTTP Date
         } => sub {
             ...
             # do the real stuff, like updating
             ...
         }
     }
+
+Alternatively:
+
+    put '/my_resource/:id' => sub {
+        ...
+        # check stuff
+        # - compute eTag from MD5
+        # - use an external table
+        # - find a last modification date
+        ...
+        http_last_modified "Tue, 15 Nov 1994 12:45:26 GMT"; # HTTP Date
+        # exits immediatly if no corresponding validation headers are provided
+        # Status: 428 (Precondition Required)
+        ...
+        # feel free to do some more stuff
+        ...
+        http_conditional => sub {
+            ...
+            # do the real stuff, like updating
+            ...
+        };
+    };
     
+
 The Dancer keyword introduced here: `http_conditional` will take either or both
 arguments: `eTag` or `LastMod`, which are two validators according to RFC-7232.
 Section 6 describes clearly how to evaluate the precedence of these validators.
