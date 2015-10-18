@@ -12,12 +12,10 @@ register http_conditional => sub {
     my $dsl     = shift;
     my $coderef = pop;
     
-    my $args    = $_[0];
-    
     return sub {
         unless ( $coderef && ref $coderef eq 'CODE' ) {
             return sub {
-               warn "Invalid http_conditional usage, missing CODEREF";
+               warn "Invalid http_conditional usage, missing CODE-REF";
             };
         } 
 
@@ -91,7 +89,7 @@ STEP_3:
         # if false for other methods, respond 412 (Precondition Failed)
         
         if ( $dsl->request->header('If-None-Match') ) {
-            if ( $dsl->request->header('If-None-Match') eq $args->{eTag} ) {
+            if ( $dsl->request->header('If-None-Match') ne $args->{eTag} ) {
                 goto STEP_5;
             } else {
                 if (
@@ -167,6 +165,13 @@ STEP_6:
         #       might be a nice way to handle it for the entire app, turning it
         #       into a strict modus. 
     }
-}
+};
+
+on_plugin_import {
+    my $dsl = shift;
+    my $app = $dsl->app;
+};
+
+register_plugin;
 
 1;
