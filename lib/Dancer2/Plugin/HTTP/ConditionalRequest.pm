@@ -10,7 +10,7 @@ use HTTP::Date;
 
 register http_last_modified => sub {
     $_[0]->log( warning =>
-        "http_last_modified: missing argument" )
+        "http_last_modified: missing date" )
         unless  $_[1];
     $_[0]->header('Last-Modified' => $_[1]);
     return;
@@ -18,7 +18,7 @@ register http_last_modified => sub {
 
 register http_etag => sub {
     $_[0]->log( warning =>
-        "http_etag: missing argument" )
+        "http_etag: missing token" )
         unless  $_[1];
     $_[0]->header('ETag' => $_[1]);
     return;
@@ -27,6 +27,7 @@ register http_etag => sub {
 register http_conditional => sub {
     my $dsl     = shift;
     my $coderef = pop;
+    my $args;
     
     return sub {
         unless ( $coderef && ref $coderef eq 'CODE' ) {
