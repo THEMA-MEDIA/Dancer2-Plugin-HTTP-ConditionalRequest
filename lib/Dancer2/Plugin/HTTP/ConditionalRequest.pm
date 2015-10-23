@@ -34,8 +34,8 @@ register http_conditional => sub {
             return sub {
                warn "http_conditional: missing CODE-REF";
             };
-        } 
-
+        }
+        
         # RFC 7232 Hypertext Transfer Protocol (HTTP/1.1): Conditional Requests
         #
         # Section 6. Precedence
@@ -178,10 +178,23 @@ STEP_6:
         #       however, for unsafe methods it could be required that the client
         #       does provide the eTag or DateModified validators.
         #       
-        #       setting the pluging config with something like: required => 1
+        #       setting     the pluging config with something like: required => 1
         #       might be a nice way to handle it for the entire app, turning it
         #       into a strict modus. 
     }
+};
+
+# RFC 7231 HTTP/1.1 Semantics and Content
+# section 4.2.1 Common Method Properties - Safe Methods#
+# http://tools.ietf.org/html/rfc7231#section-4.2.1
+# there is a patch for Dancer2 it self
+register http_method_is_safe => sub {
+    return (
+        $_[0]->request->method eq 'GET'       ||
+        $_[0]->request->method eq 'HEAD'      ||
+        $_[0]->request->method eq 'OPTIONS'   ||
+        $_[0]->request->method eq 'TRACE'
+    );
 };
 
 on_plugin_import {
