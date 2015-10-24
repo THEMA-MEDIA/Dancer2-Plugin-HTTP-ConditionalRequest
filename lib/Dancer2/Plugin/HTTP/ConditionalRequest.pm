@@ -67,7 +67,14 @@ STEP_1:
     # determined that the state-changing request has already
     # succeeded (see Section 3.1)
     
-    if ( $dsl->request->header('If-Match') ) {
+    if ( defined ($dsl->request->header('If-Match')) ) {
+        
+        # check arguments and http-headers
+        return $dsl->_http_status_precondition_failed_no_etag
+            if not exists $args->{etag};
+        
+        
+        # RFC 7232
         if ( $dsl->request->header('If-Match') eq $args->{etag} ) {
             goto STEP_3;
         } else {
@@ -87,14 +94,26 @@ STEP_2:
     # determined that the state-changing request has already
     # succeeded (see Section 3.4)
     
-    if ( $dsl->request->header('If-Unmodified-Since') ) {
+    if ( defined ($dsl->request->header('If-Unmodified-Since')) ) {
+        
+        # check arguments and http-headers
+        return $dsl->_http_status_precondition_failed_no_date
+            if not exists $args->{last_modified};
+        
         my $rqst_date = HTTP::Date::str2time(
             $dsl->request->header('If-Unmodified-Since')
         );
+        return $dsl->_http_status_bad_request_if_unmodified_since
+            if not defined $rqst_date;
+        
         my $last_date = HTTP::Date::str2time(
             $args->{last_modified}
         );
+        return $dsl->_http_status_server_error_bad_last_modified
+            if not defined $last_date;
         
+        
+        # RFC 7232
         if ( $rqst_date > $last_date ) {
             goto STEP_3;
         } else {
@@ -113,7 +132,14 @@ STEP_3:
     
     # if false for other methods, respond 412 (Precondition Failed)
     
-    if ( $dsl->request->header('If-None-Match') ) {
+    if ( defined ($dsl->request->header('If-None-Match')) ) {
+        
+        # check arguments and http-headers
+        return $dsl->_http_status_precondition_failed_no_etag
+            if not exists $args->{etag};
+        
+        
+        # RFC 7232
         if ( $dsl->request->header('If-None-Match') ne $args->{etag} ) {
             goto STEP_5;
         } else {
@@ -143,17 +169,29 @@ STEP_4:
     if (
         ($dsl->request->method eq 'GET' or $dsl->request->method eq 'HEAD')
         and
-        not $dsl->request->header('If-None-Match')
+        not defined($dsl->request->header('If-None-Match'))
         and
-        $dsl->request->header('If-Modified-Since')
+        defined($dsl->request->header('If-Modified-Since'))
     ) {
+        
+        # check arguments and http-headers
+        return $dsl->_http_status_precondition_failed_no_date
+            if not exists $args->{last_modified};
+        
         my $rqst_date = HTTP::Date::str2time(
             $dsl->request->header('If-Modified-Since')
         );
+        return $dsl->_http_status_bad_request_if_modified_since
+            if not defined $rqst_date;
+        
         my $last_date = HTTP::Date::str2time(
             $args->{last_modified}
         );
-
+        return $dsl->_http_status_server_error_bad_last_modified
+            if not defined $last_date;
+        
+        
+        # RFC 7232
         if ( $rqst_date < $last_date ) {
             goto STEP_5;
         } else {
@@ -199,19 +237,47 @@ register http_method_is_nonsafe => sub {
     return not $_[0]->http_method_is_safe();
 };
 
+sub _http_status_bad_request_if_modified_since {
+    warn "http_conditional: bad formatted date 'If-Modified-Since'";
+    $_[0]->status(400); # Bad Request
+    return;
+}
+
+sub _http_status_bad_request_if_unmodified_since {
+    warn "http_conditional: bad formatted date 'If-Unmodified-Since'";
+    $_[0]->status(400); # Bad Request
+    return;
+}
+
+sub _http_status_precondition_failed_no_date {
+    warn "http_conditional: not provided 'last_modified'";
+    $_[0]->status(412); # Precondition Failed
+    return;
+}
+
+sub _http_status_precondition_failed_no_etag {
+    warn "http_conditional: not provided 'eTag'";
+    $_[0]->status(412); # Precondition Failed
+    return;
+}
+
 sub _http_status_precondition_required_etag {
-    my $dsl = shift;    
     warn "http_conditional: Precondition Required 'ETag'";
-    $dsl->status(428); # Precondition Required
-    return "eTag!";
+    $_[0]->status(428); # Precondition Required
+    return;
 }
 
 sub _http_status_precondition_required_last_modified {
-    my $dsl = shift;    
     warn "http_conditional: Precondition Required 'Date Last-Modified'";
-    $dsl->status(428); # Precondition Required
-    return "Date!";
+    $_[0]->status(428); # Precondition Required
+    return;
 }
+
+sub _http_status_server_error_bad_last_modified {
+    $_[0]->status(500); # Precondition Failed
+    return "http_conditional: bad formatted date 'last_modified'";
+}
+
 
 register http_last_modified => sub {
     $_[0]->log( warning =>
@@ -228,6 +294,19 @@ register http_etag => sub {
     $_[0]->header('ETag' => $_[1]);
     return;
 };
+
+sub _etag {
+    my $dsl     = shift;
+    my $args    = shift;
+    
+    if ( not exists $args->{etag}) {
+        warn "http_conditional: received 'If-Match' but etag not provided";
+        $dsl->status(412); # Precondition Failed
+        return;
+    } else {
+        return $args->{etag}
+    }
+}
 
 on_plugin_import {
     my $dsl = shift;
