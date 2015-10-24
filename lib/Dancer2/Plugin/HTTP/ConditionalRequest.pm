@@ -278,36 +278,6 @@ sub _http_status_server_error_bad_last_modified {
     return "http_conditional: bad formatted date 'last_modified'";
 }
 
-
-register http_last_modified => sub {
-    $_[0]->log( warning =>
-        "http_last_modified: missing date" )
-        unless  $_[1];
-    $_[0]->header('Last-Modified' => $_[1]);
-    return;
-};
-
-register http_etag => sub {
-    $_[0]->log( warning =>
-        "http_etag: missing token" )
-        unless  $_[1];
-    $_[0]->header('ETag' => $_[1]);
-    return;
-};
-
-sub _etag {
-    my $dsl     = shift;
-    my $args    = shift;
-    
-    if ( not exists $args->{etag}) {
-        warn "http_conditional: received 'If-Match' but etag not provided";
-        $dsl->status(412); # Precondition Failed
-        return;
-    } else {
-        return $args->{etag}
-    }
-}
-
 on_plugin_import {
     my $dsl = shift;
     my $app = $dsl->app;
