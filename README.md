@@ -7,7 +7,7 @@ perform the method if the preconditions are met. Such requests are either used
 by caches to (re)validate the cached response with the origin server - or -
 to prevent lost-updates with unsafe-methods in a stateless api (like REST).
  
-    put '/my_resource/:id' => sub {
+    any '/my_resource/:id' => sub {
         ...
         # check stuff
         # - compute eTag from MD5
@@ -36,7 +36,11 @@ against the Date Last-Modified with either the 'If-Modified-Since' or
 The optional 'required' turns the API into a strict mode. Running under 'strict'
 ensures that the client will provided either the eTag or Date-Modified validator
 for un-safe requests. If not provided when required, it will return a response
-with status 428 (Precondition Required).
+with status 428 (Precondition Required) (RFC 6585).
+
+When set to false, it allows a client to sent of a request without the headers
+for the conditional requests and as such have bypassed all the checks end up in
+the last validation step and continue with the requested operation.
  
 Sending these validators with a GET request is used for caching and respond with
 a status of 304 (Not Modified) when the client has a 'fresh' version. Remember
