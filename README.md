@@ -12,18 +12,19 @@ version when using GET or preventing lost-updates with PUT:
         # - use an external table
         # - find a last modification date
         ...
-        http_etag('2d5730a4c92b1061');
-        # and / or
-        http_last_modified("Tue, 15 Nov 1994 12:45:26 GMT"); # HTTP Date
-        ...
-        # feel free to do some more stuff
-        ...
-        http_conditional => sub {
+ 
+        http_conditional {
+            etag            => '2d5730a4c92b1061',
+            last_modified   => "Tue, 15 Nov 1994 12:45:26 GMT", # HTTP Date
+            required        => true,
+        } => sub {
             ...
             # do the real stuff, like updating
             ...
-        };
+        }
     };
+
+ 
     
 The Dancer2 keywords `http_etag` and `http_last_modified` are used to 'set' the
 corresponding response headers (in case of a GET or HEAD). Once set, they will
