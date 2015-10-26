@@ -19,7 +19,7 @@ register http_conditional => sub {
         };
     };
     
-    goto STEP_6 if not $args->{required};
+    goto STEP_1 if not $args->{required};
     
     # RFC-6585 - Status 428 (Precondition Required)
     # 
@@ -32,7 +32,7 @@ register http_conditional => sub {
     # into a strict modus. 
     
     if ($dsl->http_method_is_nonsafe) {
-        warn "http_conditional: http_method_is_nonsafe";
+#       warn "http_conditional: http_method_is_nonsafe";
         return $dsl->_http_status_precondition_required_etag
             if ( $args->{etag}
                 and not $dsl->request->header('If-Match') );
@@ -40,7 +40,7 @@ register http_conditional => sub {
             if ( $args->{last_modified}
                 and not $dsl->request->header('If-Unmodified-Since') );
     } else {
-        warn "http_conditional: http_method_is_safe";
+#       warn "http_conditional: http_method_is_safe";
     };
     
 
