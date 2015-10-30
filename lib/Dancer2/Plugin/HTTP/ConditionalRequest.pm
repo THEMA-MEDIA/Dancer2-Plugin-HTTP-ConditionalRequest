@@ -19,6 +19,12 @@ register http_conditional => sub {
         };
     };
     
+    # To understand the flow of the desicions the original text of the RFC has
+    # been included so one can see that it does what the RFC says, not what the
+    # evelopper thinks it should do.
+    
+    # Additional checks for argument validation have been added.
+    
     goto STEP_1 if not $args->{required};
     
     # RFC-6585 - Status 428 (Precondition Required)
@@ -216,6 +222,17 @@ STEP_6:
     # all conditions are met, so perform the requested action and
     # respond according to its success or failure.
     
+    # set HTTP Header-fields for GET / HEAD requests
+    if (
+        ($dsl->request->method eq 'GET' or $dsl->request->method eq 'HEAD')
+    ) {
+        $dsl->header('ETag' => $args->{etag})
+            if exists($args->{etag});
+        $dsl->header('Last-Modified' => $args->{last_modified})
+            if exists($args->{last_modified});
+    }
+    
+    # RFC 7232
     return $coderef->($dsl);
     
 };
