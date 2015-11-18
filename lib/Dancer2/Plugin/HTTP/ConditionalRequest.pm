@@ -81,7 +81,8 @@ identifier, known as a eTag.
 =head2 Strong and weak validators
 
 ETags are stronger validators than the Date Last-Modified. In the above
-described example, it has two validators provided that can be used to check the conditional request. If the client did set an eTag conditional in 'If-Matched'
+described example, it has two validators provided that can be used to check the
+conditional request. If the client did set an eTag conditional in 'If-Matched'
 or 'If-None-Matched', it will try to match that. If not, it will try to match
 against the Date Last-Modified with either the 'If-Modified-Since' or
 'If-Unmodified-Since'.
