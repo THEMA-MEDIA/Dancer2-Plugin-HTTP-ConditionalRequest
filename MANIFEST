@@ -9,3 +9,6 @@ t/manifest.t
 t/pod-coverage.t
 t/pod.t
 ignore.txt
+examples/condition_safe.pl
+examples/plain_headers.pl
+examples/safe_methods.pl
