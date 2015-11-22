@@ -146,6 +146,9 @@ a string that 'uniquely' identifies the current version of the resource.
 
 a HTTP Date compliant string of the date/time this resource was last updated.
 
+A suitable string can be created from a UNIX timestamp using
+L<HTTP::Date::time2str|HTTP::Date/time2str>.
+
 =item required
 
 if set to true, it enforces clients that request a unsafe method to privide one
