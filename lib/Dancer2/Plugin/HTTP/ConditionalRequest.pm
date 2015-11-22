@@ -41,7 +41,7 @@ to prevent lost-updates with unsafe-methods in a stateless api (like REST).
         http_conditional {
             etag            => '2d5730a4c92b1061',
             last_modified   => "Tue, 15 Nov 1994 12:45:26 GMT", # HTTP Date
-            required        => false,
+            http_strict     => false,
         } => sub {
             ...
             # do the real stuff, like updating
@@ -89,10 +89,10 @@ against the Date Last-Modified with either the 'If-Modified-Since' or
 
 =head2 Required or not
 
-The optional 'required' turns the API into a strict mode. Running under 'strict'
-ensures that the client will provided either the eTag or Date-Modified validator
-for un-safe requests. If not provided when required, it will return a response
-with status 428 (Precondition Required) (RFC 6585).
+The optional 'http_strict' turns the API into a strict mode. Running under
+'strict' ensures that the client will provided either the eTag or Date-Modified
+validator for un-safe requests. If not provided when required, it will return a
+response with status 428 (Precondition Required) (RFC 6585).
 
 When set to false, it allows a client to sent of a request without the headers
 for the conditional requests and as such have bypassed all the checks end up in
@@ -146,7 +146,7 @@ a string that 'uniquely' identifies the current version of the resource.
 
 a HTTP Date compliant string of the date/time this resource was last updated.
 
-=item required
+=item http_strict
 
 if set to true, it enforces clients that request a unsafe method to privide one
 or both validators.
@@ -175,7 +175,7 @@ register http_conditional => sub {
     
     # Additional checks for argument validation have been added.
     
-    goto STEP_1 if not $args->{required};
+    goto STEP_1 if not $args->{http_strict};
     
     # RFC-6585 - Status 428 (Precondition Required)
     # 
@@ -183,7 +183,7 @@ register http_conditional => sub {
     # however, for unsafe methods it could be required that the client
     # does provide the eTag or DateModified validators.
     # 
-    # setting the pluging config with something like: required => 1
+    # setting the pluging config with something like: http_strict => 1
     # might be a nice way to handle it for the entire app, turning it
     # into a strict modus. 
     
