@@ -146,6 +146,10 @@ a string that 'uniquely' identifies the current version of the resource.
 
 a HTTP Date compliant string of the date/time this resource was last updated.
 
+A suitable string can be created from a UNIX timestamp using
+L<HTTP::Date::time2str|HTTP::Date/time2str>, or from a L<DateTime|DateTime>
+object using C<format_datetime> from L<DateTime::Format::HTTP|DateTime::Format::HTTP/format_datetime>.
+
 =item required
 
 if set to true, it enforces clients that request a unsafe method to privide one
@@ -154,7 +158,7 @@ or both validators.
 =back
 
 If used with either a GET or a HEAD method, the validators mentioned in the
-options are returned in the aproriate HTTP Header Fields.
+options are returned in the appropriate HTTP Header Fields.
 
 =cut
 
