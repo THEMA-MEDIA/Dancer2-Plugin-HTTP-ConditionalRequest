@@ -7,18 +7,17 @@ perform the method if the preconditions are met. Such requests are either used
 by caches to (re)validate the cached response with the origin server - or -
 to prevent lost-updates with unsafe-methods in a stateless api (like REST).
  
-    any '/my_resource/:id' => sub {
+    any ['get', put', delete'] => '/my_resource/:id' => sub {
         ...
-        # check stuff
-        # - compute eTag from MD5
-        # - use an external table
-        # - find a last modification date
+        my $object = find_something(param->{id})
+            or return sub { status (404 ) };
+        
         ...
         
         http_conditional {
-            etag            => '2d5730a4c92b1061',
-            last_modified   => "Tue, 15 Nov 1994 12:45:26 GMT", # HTTP Date
-            required        => false,
+            etag            => $object->serialize_to_etag,
+            last_modified   => $object->format_http_date,
+            http_strict     => false,
         } => sub {
             ...
             # do the real stuff, like updating
