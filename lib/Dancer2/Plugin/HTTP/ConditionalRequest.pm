@@ -38,13 +38,8 @@ to prevent lost-updates with unsafe-methods in a stateless api (like REST).
         ...
         
         http_conditional {
-<<<<<<< HEAD
             etag            => $object->serialize_to_etag,
             last_modified   => $object->format_http_date,
-=======
-            etag            => '2d5730a4c92b1061',
-            last_modified   => "Tue, 15 Nov 1994 12:45:26 GMT", # HTTP Date
->>>>>>> 254204adf59fc587c5899f090cd7791d4964b0d6
             http_strict     => false,
         } => sub {
             ...
