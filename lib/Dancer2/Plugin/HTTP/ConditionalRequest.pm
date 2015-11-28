@@ -6,11 +6,11 @@ Dancer2::Plugin::HTTP::ConditionalRequest - RFC 7232 compliant
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use warnings;
 use strict;
@@ -38,8 +38,13 @@ to prevent lost-updates with unsafe-methods in a stateless api (like REST).
         ...
         
         http_conditional {
+<<<<<<< HEAD
             etag            => $object->serialize_to_etag,
             last_modified   => $object->format_http_date,
+=======
+            etag            => '2d5730a4c92b1061',
+            last_modified   => "Tue, 15 Nov 1994 12:45:26 GMT", # HTTP Date
+>>>>>>> 254204adf59fc587c5899f090cd7791d4964b0d6
             http_strict     => false,
         } => sub {
             ...
@@ -149,9 +154,9 @@ A suitable string can be created from a UNIX timestamp using
 L<HTTP::Date::time2str|HTTP::Date/time2str>, or from a L<DateTime|DateTime>
 object using C<format_datetime> from L<DateTime::Format::HTTP|DateTime::Format::HTTP/format_datetime>.
 
-=item required
+=item http_strict
 
-if set to true, it enforces clients that request a unsafe method to privide one
+if set to true, it enforces clients that request an unsafe method to provide one
 or both validators.
 
 =back
