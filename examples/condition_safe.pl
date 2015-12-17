@@ -2,10 +2,15 @@ use Dancer2;
 use lib '../lib';
 use Dancer2::Plugin::HTTP::ConditionalRequest;
 
+use DateTime;
+
+my $sometime = DateTime->now;
+
+
 any '/conditional' => sub {
     http_conditional {
         etag            => "x",
-        last_modified   => "Sat, 24 Oct 2015 20:28:20 GMT",
+        last_modified   => $sometime,
         required        => true
         } => sub {
         "Condition met to execute the request..."
