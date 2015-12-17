@@ -9,7 +9,7 @@ my $sometime = DateTime->now;
 
 any '/conditional' => sub {
     http_conditional {
-        etag            => "x",
+#       etag            => "x",
         last_modified   => $sometime,
         required        => true
         } => sub {

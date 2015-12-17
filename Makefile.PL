@@ -19,6 +19,7 @@ WriteMakefile(
     },
     PREREQ_PM => {
         'Dancer2::Plugin' => 0,
+        'DateTime::Format::HTTP' => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Dancer2-Plugin-HTTP-ConditionalRequest-*' },

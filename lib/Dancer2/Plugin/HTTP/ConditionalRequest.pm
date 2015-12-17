@@ -18,8 +18,6 @@ use strict;
 use Carp;
 use Dancer2::Plugin;
 
-use HTTP::Date;
-use DateTime;
 use DateTime::Format::HTTP;
 
 
