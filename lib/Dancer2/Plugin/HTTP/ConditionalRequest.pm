@@ -198,17 +198,17 @@ register http_conditional => sub {
     
     if ($self->http_method_is_nonsafe) {
 #       warn "http_conditional: http_method_is_nonsafe";
-        return $self->_http_status_precondition_required_etag
+        $self->halt( $self->_http_status_precondition_required_etag )
             if ( $args->{etag}
                 and not $self->app->request->header('If-Match') );
-        return $self->_http_status_precondition_required_last_modified
+        $self->halt( $self->_http_status_precondition_required_last_modified)
             if ( $args->{last_modified}
                 and not $self->app->request->header('If-Unmodified-Since') );
     } else {
 #       warn "http_conditional: http_method_is_safe";
     };
     
-
+    
     # RFC 7232 Hypertext Transfer Protocol (HTTP/1.1): Conditional Requests
     #
     # Section 6. Precedence
@@ -235,7 +235,7 @@ STEP_1:
     if ( defined ($self->app->request->header('If-Match')) ) {
         
         # check arguments and http-headers
-        return $self->_http_status_precondition_failed_no_etag
+        $self->halt( $self->_http_status_precondition_failed_no_etag )
             if not exists $args->{etag};
         
         
@@ -244,7 +244,7 @@ STEP_1:
             goto STEP_3;
         } else {
             $self->app->response->status(412); # Precondition Failed
-            return;
+            $self->halt( );
         }
     }
     
@@ -262,19 +262,19 @@ STEP_2:
     if ( defined ($self->app->request->header('If-Unmodified-Since')) ) {
         
         # check arguments and http-headers
-        return $self->_http_status_precondition_failed_no_date
+        $self->halt( $self->_http_status_precondition_failed_no_date )
             if not exists $args->{last_modified};
         
         my $rqst_date = DateTime::Format::HTTP->parse_datetime(
             $self->app->request->header('If-Unmodified-Since')
         );
-        return $self->_http_status_bad_request_if_unmodified_since
+        $self->halt( $self->_http_status_bad_request_if_unmodified_since )
             if not defined $rqst_date;
             
         my $last_date = $args->{last_modified}->isa('DateTime')
             ? $args->{last_modified}
             : DateTime::Format::HTTP->parse_datetime($args->{last_modified});
-        return $self->_http_status_server_error_bad_last_modified
+        $self->halt( $self->_http_status_server_error_bad_last_modified )
             if not defined $last_date;
         
         
@@ -300,7 +300,7 @@ STEP_3:
     if ( defined ($self->app->request->header('If-None-Match')) ) {
         
         # check arguments and http-headers
-        return $self->_http_status_precondition_failed_no_etag
+        $self->halt( $self->_http_status_precondition_failed_no_etag )
             if not exists $args->{etag};
         
         
@@ -314,10 +314,10 @@ STEP_3:
                 $self->app->request->method eq 'HEAD'
             ) {
                 $self->app->response->status(304); # Not Modified
-                return;
+                $self->halt;
             } else {
                 $self->app->response->status(412); # Precondition Failed
-                return;
+                $self->halt( );
             }
         }
     }
@@ -340,19 +340,19 @@ STEP_4:
     ) {
         
         # check arguments and http-headers
-        return $self->_http_status_precondition_failed_no_date
+        $self->halt( $self->_http_status_precondition_failed_no_date )
             if not exists $args->{last_modified};
         
         my $rqst_date = DateTime::Format::HTTP->parse_datetime(
             $self->app->request->header('If-Modified-Since')
         );
-        return $self->_http_status_bad_request_if_modified_since
+        $self->halt( $self->_http_status_bad_request_if_modified_since )
             if not defined $rqst_date;
         
         my $last_date = $args->{last_modified}->isa('DateTime')
             ? $args->{last_modified}
             : DateTime::Format::HTTP->parse_datetime($args->{last_modified});
-        return $self->_http_status_server_error_bad_last_modified
+        $self->halt( $self->_http_status_server_error_bad_last_modified )
             if not defined $last_date;
         
         
@@ -361,7 +361,7 @@ STEP_4:
             goto STEP_5;
         } else {
             $self->app->response->status(304); # Not Modified
-            return;
+            $self->halt( );
         }
     }
     
@@ -392,7 +392,7 @@ STEP_6:
             my $last_date = $args->{last_modified}->isa('DateTime')
                 ? $args->{last_modified}
                 : DateTime::Format::HTTP->parse_datetime($args->{last_modified});
-            return $self->_http_status_server_error_bad_last_modified
+            $self->halt( $self->_http_status_server_error_bad_last_modified )
                 if not defined $last_date;
             $self->app->response->header('Last-Modified' =>
                 DateTime::Format::HTTP->format_datetime($last_date) )
