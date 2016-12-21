@@ -10,7 +10,7 @@ Version 0.01
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.03';
 
 use warnings;
 use strict;
@@ -18,7 +18,8 @@ use strict;
 use Carp;
 use Dancer2::Plugin;
 
-use HTTP::Date;
+use DateTime::Format::HTTP;
+
 
 =head1 SYNOPSIS
 
@@ -146,6 +147,10 @@ a string that 'uniquely' identifies the current version of the resource.
 
 a HTTP Date compliant string of the date/time this resource was last updated.
 
+or
+
+a DateTime object.
+
 A suitable string can be created from a UNIX timestamp using
 L<HTTP::Date::time2str|HTTP::Date/time2str>, or from a L<DateTime|DateTime>
 object using C<format_datetime> from L<DateTime::Format::HTTP|DateTime::Format::HTTP/format_datetime>.
@@ -260,15 +265,15 @@ STEP_2:
         return $dsl->_http_status_precondition_failed_no_date
             if not exists $args->{last_modified};
         
-        my $rqst_date = HTTP::Date::str2time(
+        my $rqst_date = DateTime::Format::HTTP->parse_datetime(
             $dsl->request->header('If-Unmodified-Since')
         );
         return $dsl->_http_status_bad_request_if_unmodified_since
             if not defined $rqst_date;
-        
-        my $last_date = HTTP::Date::str2time(
-            $args->{last_modified}
-        );
+            
+        my $last_date = $args->{last_modified}->isa('DateTime')
+            ? $args->{last_modified}
+            : DateTime::Format::HTTP->parse_datetime($args->{last_modified});
         return $dsl->_http_status_server_error_bad_last_modified
             if not defined $last_date;
         
@@ -338,15 +343,15 @@ STEP_4:
         return $dsl->_http_status_precondition_failed_no_date
             if not exists $args->{last_modified};
         
-        my $rqst_date = HTTP::Date::str2time(
+        my $rqst_date = DateTime::Format::HTTP->parse_datetime(
             $dsl->request->header('If-Modified-Since')
         );
         return $dsl->_http_status_bad_request_if_modified_since
             if not defined $rqst_date;
         
-        my $last_date = HTTP::Date::str2time(
-            $args->{last_modified}
-        );
+        my $last_date = $args->{last_modified}->isa('DateTime')
+            ? $args->{last_modified}
+            : DateTime::Format::HTTP->parse_datetime($args->{last_modified});
         return $dsl->_http_status_server_error_bad_last_modified
             if not defined $last_date;
         
@@ -368,8 +373,8 @@ STEP_5:
     # applicable to the selected representation, respond 206
     # (Partial Content) [RFC7233]
     
-    # TODO
-
+    undef; # TODO (BTW, up till perl 5.13, this would break because of labels
+    
 STEP_6:
     # Otherwise,
     
@@ -380,10 +385,18 @@ STEP_6:
     if (
         ($dsl->request->method eq 'GET' or $dsl->request->method eq 'HEAD')
     ) {
-        $dsl->header('ETag' => $args->{etag})
-            if exists($args->{etag});
-        $dsl->header('Last-Modified' => $args->{last_modified})
-            if exists($args->{last_modified});
+        if ( exists($args->{etag}) ) {
+            $dsl->header('ETag' => $args->{etag})
+        }
+        if ( exists($args->{last_modified}) ) {
+            my $last_date = $args->{last_modified}->isa('DateTime')
+                ? $args->{last_modified}
+                : DateTime::Format::HTTP->parse_datetime($args->{last_modified});
+            return $dsl->_http_status_server_error_bad_last_modified
+                if not defined $last_date;
+            $dsl->header('Last-Modified' =>
+                DateTime::Format::HTTP->format_datetime($last_date) )
+        }
     }
     
     # RFC 7232
