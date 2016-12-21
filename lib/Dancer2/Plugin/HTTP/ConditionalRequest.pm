@@ -10,7 +10,7 @@ Version 0.01
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use warnings;
 use strict;
@@ -462,11 +462,6 @@ sub _http_status_server_error_bad_last_modified {
     $_[0]->status(500); # Precondition Failed
     return "http_conditional: bad formatted date 'last_modified'";
 }
-
-# on_plugin_import {
-#     my $dsl = shift;
-#     my $app = $self->app;
-# };
 
 register_plugin;
 
