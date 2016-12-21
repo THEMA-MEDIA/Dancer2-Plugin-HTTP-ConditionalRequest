@@ -43,11 +43,10 @@ to prevent lost-updates with unsafe-methods in a stateless api (like REST).
             etag            => '2d5730a4c92b1061',
             last_modified   => "Tue, 15 Nov 1994 12:45:26 GMT", # HTTP Date
             required        => false,
-        } => sub {
-            ...
-            # do the real stuff, like updating
-            ...
         }
+        
+        # do the real stuff, like updating or serializing
+        
     };
 
 =head1 RFC_7232 HTTP: Conditional Requests... explained
@@ -132,8 +131,10 @@ those topics.
 
 =head2 http_conditional
 
-This keyword takes as last argument the CODEREF of the part that should be ran
-if the pre-conditions are met.
+This keyword used will check with the passed in parameters to do a conditional
+request. If these pre-conditions are not met execution will be halted with the
+relevant status code. If the preconditions apply, execution will continue on the
+following line.
 
 A optional hashref takes the options
 
@@ -157,13 +158,13 @@ object using C<format_datetime> from L<DateTime::Format::HTTP|DateTime::Format::
 
 =item required
 
-if set to true, it enforces clients that request a unsafe method to privide one
+if set to true, it enforces clients that request a unsafe method to provide one
 or both validators.
 
 =back
 
 If used with either a GET or a HEAD method, the validators mentioned in the
-options are returned in the appropriate HTTP Header Fields.
+options are set and returned in the appropriate HTTP Header Fields.
 
 =cut
 
@@ -519,7 +520,7 @@ L<http://search.cpan.org/dist/Dancer2-Plugin-HTTP-ConditionalRequest/>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2015 Theo van Hoesel.
+Copyright 2015-2016 Theo van Hoesel.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the the Artistic License (2.0). You may obtain a
