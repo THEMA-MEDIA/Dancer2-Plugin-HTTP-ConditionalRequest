@@ -1,3 +1,4 @@
+.gitignore
 /blib/
 /.build/
 _build/
@@ -18,3 +19,5 @@ nytprof.out
 *.o
 *.bs
 *.tar.gz
+.DS_Store
+
